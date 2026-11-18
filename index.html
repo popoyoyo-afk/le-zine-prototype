@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Prototype cliquable : une alternative écologique réaliste en 30 secondes.">
+<title>Le zine du quotidien</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout : panneau de démo à gauche, téléphone 390 px à droite ; sur mobile, le téléphone d'abord, plein écran.
+   Direction : piste 2 « Fanzine » — deux encres riso en surimpression, papier recyclé. Thème unique assumé (papier). */
+:root{
+  --papier:#f4f1ea; --carte:#fffdf7; --encre:#23305e; --encre-p:#151c3d;
+  --rose:#ff48b0; --rose-t:#c4167a; --bleu:#0078bf; --sur:#3d255e; --jaune:#ffe800;
+  --agrafe:#8a8f99; --filet:#c9c4b8; --fond:#e4dfd3;
+  --titre:"Bowlby One", Impact, "Arial Black", sans-serif;
+  --texte:"Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--fond);color:var(--encre);font-family:var(--texte);font-size:16px;line-height:1.4;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:24px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,label:focus-within{outline:3px solid var(--rose-t);outline-offset:3px}
+.stage{display:flex;gap:40px;justify-content:center;align-items:flex-start;max-width:1100px;margin:0 auto}
+/* Panneau */
+.panel{width:330px;flex:0 0 auto;display:flex;flex-direction:column;gap:18px}
+.panel h1{font-family:var(--titre);font-weight:400;text-transform:uppercase;font-size:34px;line-height:.95;margin:0;color:var(--encre);text-wrap:balance}
+.panel p{margin:0;font-size:15px}
+.panel .grp{display:flex;flex-direction:column;gap:6px}
+.panel .grp h2{font-family:var(--titre);font-weight:400;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--rose-t);margin:0}
+.panel .chips{display:flex;flex-wrap:wrap;gap:6px}
+.panel .chips button{background:var(--carte);border:2px solid var(--encre);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700}
+.panel .chips button[aria-pressed="true"]{background:var(--bleu);color:var(--carte);border-color:var(--bleu)}
+.panel .note{font-size:13px;border:2px dashed var(--encre);padding:10px 12px;border-radius:12px;background:var(--carte)}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:700;font-size:14px}
+/* Téléphone */
+.phone{width:390px;max-width:100%;height:min(844px, calc(100dvh - 48px));min-height:640px;background:var(--papier);border:2px solid var(--encre);border-radius:34px;
+  position:relative;overflow:hidden;box-shadow:10px 10px 0 var(--encre);display:flex;flex-direction:column;isolation:isolate;flex:0 0 auto}
+.sb{height:44px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-weight:700;font-size:15px;position:relative;z-index:3}
+.sb.on-bleu{color:var(--carte)}
+.sb svg{display:block}
+.view{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;display:flex;flex-direction:column}
+.view.bleu{background:var(--bleu);color:var(--carte)}
+.pad{padding:8px 18px 24px;display:flex;flex-direction:column;gap:16px;position:relative;z-index:1;flex:1 0 auto}
+.spread{justify-content:space-between}
+.blob{position:absolute;border-radius:50%;mix-blend-mode:multiply;pointer-events:none;z-index:0}
+.sq{border-radius:0}
+.dots{position:absolute;width:120px;height:120px;mix-blend-mode:multiply;pointer-events:none;z-index:0;background-image:radial-gradient(var(--rose) 38%, transparent 40%);background-size:10px 10px}
+.dots.b{background-image:radial-gradient(var(--bleu) 30%, transparent 32%);background-size:8px 8px}
+/* Typo */
+.k{font-family:var(--titre);font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--rose-t);margin:0;line-height:16px}
+.on-bleu .k,.view.bleu .k{color:var(--carte)}
+.dbl{display:grid;margin:0;font-family:var(--titre);font-weight:400;text-transform:uppercase;line-height:.92;font-size:34px;isolation:isolate}
+.dbl.xl{font-size:44px}
+.dbl>span{grid-area:1/1;mix-blend-mode:multiply;text-wrap:balance}
+.dbl .r{color:var(--rose);transform:translate(4px,3px)}
+.dbl .b{color:var(--bleu)}
+.h3{font-family:var(--titre);font-weight:400;text-transform:uppercase;font-size:22px;line-height:1;margin:0}
+.lead{font-size:18px;line-height:26px;margin:0}
+.p{margin:0}
+.small{font-size:14px;line-height:20px;margin:0}
+.strong{font-weight:700}
+.num{font-variant-numeric:tabular-nums}
+/* Topbar */
+.top{display:flex;align-items:center;gap:4px;padding:0 14px 0 6px;min-height:52px;position:relative;z-index:2}
+.top .k{flex:1;text-align:center}
+.ib{width:48px;height:48px;border:0;background:none;display:grid;place-items:center;border-radius:999px;padding:0}
+.ib.ring{border:2px solid var(--encre)}
+.skip{border:0;background:none;font-weight:700;text-decoration:underline;text-underline-offset:4px;min-height:48px;padding:0 4px}
+/* Boutons */
+.btn{min-height:54px;border-radius:999px;border:0;background:var(--rose);color:var(--encre-p);font-family:var(--titre);text-transform:uppercase;font-size:16px;padding:0 22px;width:100%}
+.btn:active{transform:translate(2px,2px)}
+.btn2{min-height:54px;border-radius:999px;border:2px dashed var(--encre);background:transparent;font-weight:700;font-size:15px;padding:0 20px;width:100%}
+.view.bleu .btn2{border-color:var(--carte);color:var(--carte)}
+.lnk{border:0;background:none;font-weight:700;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;min-height:48px;padding:0 2px}
+.view.bleu .lnk{color:var(--carte)}
+.stack{display:flex;flex-direction:column;gap:8px;align-items:center}
+.row{display:flex;gap:10px;align-items:center}
+.between{justify-content:space-between}
+/* Cartes */
+.card{background:var(--carte);border:2px solid var(--encre);padding:16px;position:relative;display:flex;flex-direction:column;gap:8px;color:var(--encre)}
+.card.staple::before{content:"";position:absolute;left:50%;top:-12px;width:4px;height:24px;background:var(--agrafe);transform:translateX(-50%)}
+.tilt-l{transform:rotate(-1.4deg)} .tilt-r{transform:rotate(1.2deg)}
+.dash{border:2px dashed var(--encre);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;background:var(--carte)}
+.pill{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--encre);border-radius:999px;padding:4px 11px;font-weight:700;font-size:13px;background:transparent}
+.pill.y{background:var(--jaune);border-color:var(--jaune);color:var(--encre)}
+.pill.d{border-style:dashed}
+/* Choix */
+.choice{display:flex;align-items:center;gap:14px;width:100%;text-align:left;min-height:72px;padding:14px 16px;background:var(--carte);border:2px solid var(--encre)}
+.choice .tx{flex:1;display:flex;flex-direction:column}
+.choice .tx b{font-size:17px}
+.choice .tx span{font-size:14px}
+.choice .dot{width:26px;height:26px;border-radius:999px;border:2px solid var(--encre);flex:0 0 auto;display:grid;place-items:center}
+.choice[aria-checked="true"],.choice[aria-pressed="true"]{background:var(--bleu);color:var(--carte)}
+.choice[aria-checked="true"] .dot,.choice[aria-pressed="true"] .dot{background:var(--rose);border-color:var(--rose)}
+/* Alternatives */
+.alt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;min-height:76px;padding:10px 12px 10px 10px;background:var(--carte);border:2px solid var(--encre)}
+.alt[aria-checked="true"]{outline:3px solid var(--rose);outline-offset:-6px}
+.alt .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.alt .tx b{font-size:17px}
+.alt .tx span{font-size:14px}
+.vig{width:56px;height:56px;flex:0 0 auto;position:relative;overflow:hidden;display:grid;place-items:center}
+.vig::after{content:"";position:absolute;width:40px;height:40px;border-radius:50%;right:-10px;bottom:-10px;background:var(--c2);mix-blend-mode:multiply}
+.vig svg{position:relative;z-index:1}
+/* Impact */
+.barrow{display:grid;grid-template-columns:128px 1fr auto;gap:10px;align-items:center}
+.barrow .l{display:flex;flex-direction:column;font-size:14px;line-height:18px}
+.barrow .l b{font-size:13px}
+.track{height:20px;display:flex}
+.track i{display:block;height:20px}
+.barrow .v{font-weight:700;font-size:13px;font-variant-numeric:tabular-nums}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tile{padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.tile b{font-family:var(--titre);font-weight:400;font-size:21px;line-height:1;text-transform:uppercase}
+.tile span{font-size:13px;font-weight:700}
+.tile.r{background:var(--rose);color:var(--encre-p)} .tile.y{background:var(--jaune);color:var(--encre)} .tile.o{border:2px solid var(--encre)}
+.hist{display:flex;flex-direction:column}
+.hist .it{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:2px dashed var(--encre)}
+.hist .it .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.hist .it .tx span{font-size:14px}
+.hist .it .v{font-family:var(--titre);font-size:17px;font-variant-numeric:tabular-nums}
+/* Défi */
+.days{display:flex;gap:6px;flex-wrap:wrap}
+.days button{width:36px;height:36px;border:2px solid var(--encre);border-radius:8px;background:transparent;font-weight:700;padding:0}
+.days button[aria-pressed="true"]{background:var(--bleu);color:var(--carte);border-color:var(--bleu)}
+/* Nav */
+.nav{flex:0 0 auto;height:76px;border-top:2px solid var(--encre);display:grid;grid-template-columns:1fr 1fr 76px 1fr 1fr;align-items:center;background:var(--papier);position:relative;z-index:3}
+.nav button{border:0;background:none;font-family:var(--titre);text-transform:uppercase;font-size:12px;min-height:48px;padding:0 4px;display:grid;place-items:center}
+.nav button span{padding:7px 10px;border-radius:999px}
+.nav button[aria-current="page"] span{background:var(--bleu);color:var(--carte)}
+.nav .scan{width:62px;height:62px;border-radius:999px;background:var(--rose);border:2px solid var(--encre);margin:-36px auto 0;display:grid;place-items:center}
+/* Scanner */
+.finder{position:relative;margin:0 auto;width:300px;max-width:100%;height:190px;border:3px dashed var(--carte);border-radius:24px;display:grid;place-items:center;background:transparent}
+.finder .lab{background:var(--carte);width:150px;height:96px;transform:rotate(-4deg);display:flex;flex-direction:column;justify-content:space-between;padding:10px 12px}
+.finder .lab .code{height:44px;background:repeating-linear-gradient(90deg,var(--encre) 0 2px,transparent 2px 5px,var(--encre) 5px 6px,transparent 6px 9px)}
+.finder .lab small{font-size:10px;font-weight:700;color:var(--encre)}
+.finder .beam{position:absolute;left:20px;right:20px;height:2px;background:var(--rose);top:50%;animation:beam 1.8s ease-in-out infinite alternate}
+@keyframes beam{from{transform:translateY(-70px)}to{transform:translateY(70px)}}
+.tools{display:flex;justify-content:center;gap:34px}
+.tools button{border:0;background:none;color:var(--carte);display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:700;font-size:13px}
+.tools button i{width:56px;height:56px;border:2px solid var(--carte);border-radius:999px;display:grid;place-items:center}
+.store{align-self:center;background:var(--carte);color:var(--encre);border-radius:999px;padding:8px 14px;font-weight:700;font-size:14px;border:0}
+.steps{display:flex;flex-direction:column;gap:12px}
+.step{display:flex;gap:12px;align-items:center;padding:12px 14px;background:var(--carte);border:2px solid var(--encre)}
+.step.wait{border-style:dashed}
+.step .d{width:26px;height:26px;border-radius:999px;display:grid;place-items:center;border:2px dashed var(--encre);flex:0 0 auto}
+.step.ok .d{background:var(--rose);border:0}
+.skel{display:block;height:14px;width:170px;border-radius:7px;background:var(--filet)}
+/* Feuilles */
+.scrim{position:absolute;inset:0;background:rgba(35,48,94,.55);z-index:20;display:flex;align-items:flex-end}
+.sheet{background:var(--carte);border-top:2px solid var(--encre);border-radius:24px 24px 0 0;width:100%;max-height:86%;overflow:auto;padding:24px 18px 26px;display:flex;flex-direction:column;gap:14px;position:relative;animation:up .22s ease-out}
+.sheet::before{content:"";position:sticky;display:block;top:-24px;margin:-37px auto 0;width:4px;height:26px;background:var(--agrafe)}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.calc{border:2px dashed var(--encre);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.calc div{display:flex;justify-content:space-between;gap:8px}
+.src{display:flex;gap:12px;align-items:center;padding:8px 0;border-bottom:2px dashed var(--encre);font-size:14px}
+.src div{flex:1;display:flex;flex-direction:column}
+.field{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:13px}
+.field input{min-height:52px;border-radius:999px;border:2px solid var(--encre);background:var(--carte);padding:0 16px;font:inherit;font-weight:400;font-size:16px;color:var(--encre)}
+.field input[readonly]{background:var(--papier)}
+.photo{min-height:110px;border:2px dashed var(--encre);border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:700;cursor:pointer;text-align:center;padding:10px}
+.photo input{position:absolute;opacity:0;width:1px;height:1px}
+.banner{display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:16px;border:2px solid var(--encre);font-weight:700;font-size:13px}
+.banner.y{background:var(--jaune)} .banner.i{border-style:dashed;background:var(--carte)}
+.toggle{width:56px;height:32px;border-radius:999px;border:2px solid var(--encre);background:var(--carte);padding:3px;display:flex;flex:0 0 auto}
+.toggle i{width:22px;height:22px;border-radius:999px;background:var(--encre);display:block;transition:transform .15s}
+.toggle[aria-checked="true"]{background:var(--bleu)}
+.toggle[aria-checked="true"] i{background:var(--carte);transform:translateX(24px)}
+.toast{position:absolute;left:16px;right:16px;bottom:92px;z-index:40;background:var(--encre);color:var(--carte);padding:12px 14px;border-radius:16px;font-weight:700;font-size:14px}
+.covers{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cover{height:180px;position:relative;overflow:hidden;border:0;text-align:left;padding:12px;display:flex;flex-direction:column;justify-content:space-between}
+.cover::after{content:"";position:absolute;width:120px;height:120px;border-radius:50%;right:-30px;top:-30px;background:var(--c2);mix-blend-mode:multiply}
+.cover b{font-family:var(--titre);font-weight:400;font-size:20px;line-height:.95;text-transform:uppercase;position:relative;z-index:1}
+.cover span{font-family:var(--titre);font-size:12px;text-transform:uppercase;position:relative;z-index:1}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:820px){
+  .stage{flex-direction:column;align-items:center}
+  .panel{width:100%;max-width:390px;order:2}
+}
+@media (max-width:440px){
+  body{padding-block:0}
+  .phone{width:100%;border-radius:0;border-left:0;border-right:0;box-shadow:none;height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:560px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <aside class="panel" aria-label="Commandes de la démo">
+    <div class="grp">
+      <h2>Prototype · piste 2 Fanzine</h2>
+      <h1>Le zine du quotidien</h1>
+    </div>
+    <p>Une alternative écologique réaliste en 30 secondes : scanne l’étiquette d’un vêtement, vois d’où vient son impact (matière, fabrication, transport), puis choisis une alternative du même rayon.</p>
+    <div class="grp">
+      <h2>Aller à un écran</h2>
+      <div class="chips" id="jump"></div>
+    </div>
+    <div class="grp">
+      <h2>Que scanner ?</h2>
+      <div class="chips" id="product"></div>
+    </div>
+    <div class="grp">
+      <h2>Simulations</h2>
+      <label class="sw" for="offline">Hors connexion<button class="toggle" id="offline" role="switch" aria-checked="false"><i></i></button></label>
+      <div class="chips"><button id="reset" type="button">Repartir de zéro</button></div>
+    </div>
+    <p class="note">Chiffres d’impact fictifs mais cohérents entre les écrans, à recaler sur Ecobalyse et la Base Empreinte® ADEME. Aucune donnée n’est envoyée.</p>
+  </aside>
+
+  <div class="phone" id="phone" aria-label="Aperçu de l’application">
+    <div class="sb" id="sb"><span class="num">9:41</span>
+      <svg width="62" height="12" viewBox="0 0 66 12" aria-hidden="true"><g fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="6" width="3" height="6" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><path d="M29 3.5a9 9 0 0 1 12 0l-1.4 1.5a7 7 0 0 0-9.2 0zM31.5 6.3a5.5 5.5 0 0 1 7 0L35 10z"/><rect x="47" y="2.5" width="14" height="7" rx="1.5"/></g><rect x="45" y="0.5" width="18" height="11" rx="3" fill="none" stroke="currentColor"/></svg>
+    </div>
+    <main class="view" id="view"></main>
+    <nav class="nav" id="nav" aria-label="Navigation principale"></nav>
+    <div id="layer"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const fr=n=>n.toFixed(1).replace('.',',');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- Icônes ---------- */
+const I={
+  scan:'<path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3M7 12h10"/>',
+  back:'<path d="M19 12H5M11 6l-6 6 6 6"/>', close:'<path d="M18 6 6 18M6 6l12 12"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>', ext:'<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+  flash:'<path d="M13 2 4 14h8l-1 8 9-12h-8l1-8z"/>', hist:'<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5M12 7v5l4 2"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>', info:'<circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>', thread:'<path d="M4 20c4-8 12-8 16-16M4 14c3-3 6-3 8-6M10 20c3-3 7-4 10-8"/>'
+};
+const ic=(n,s=24,c='currentColor')=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
+const VIS={tshirt:'M22 6 L28 3 Q32 9 36 3 L42 6 L58 16 L52 28 L46 24 L46 60 L18 60 L18 24 L12 28 L6 16 Z',jean:'M16 4h32l4 56H38L32 26l-6 34H12z',sweat:'M22 6 L28 3 Q32 8 36 3 L42 6 L56 14 L62 52 L54 54 L48 26 L48 60 L16 60 L16 26 L10 54 L2 52 L8 14 Z'};
+const vis=(k,size,fill)=>`<svg width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true"><path d="${VIS[k]}" fill="${fill}"/></svg>`;
+const vig=(k,bg,s=56)=>{const m={bleu:['var(--bleu)','var(--rose)','var(--carte)'],rose:['var(--rose)','var(--bleu)','var(--encre)'],jaune:['var(--jaune)','var(--rose)','var(--encre)']}[bg];return `<span class="vig" style="background:${m[0]};--c2:${m[1]};width:${s}px;height:${s}px">${vis(k,Math.round(s*.72),m[2])}</span>`};
+const dbl=(t,cls='')=>`<h1 class="dbl ${cls}"><span class="r" aria-hidden="true">${t}</span><span class="b">${t}</span></h1>`;
+
+/* ---------- Données ---------- */
+const PRODUCTS={
+  tshirt:{label:'T-shirt',name:'T-shirt basique',meta:'Marque A · 12,99 €',rayon:'t-shirts',matiere:'Coton conventionnel',pays:'Bangladesh',total:5.2,
+    bars:[['Matière','coton conventionnel',2.4,'var(--bleu)'],['Fabrication','Bangladesh · charbon',2.2,'var(--rose)'],['Transport, vente','bateau · 16 000 km',0.6,'var(--sur)']],
+    alts:[
+      {id:'recycle',name:'Coton recyclé',where:'Turquie',saved:1.9,price:'même prix',same:true,bg:'bleu',total:3.3,
+       why:[['Matière','coton recyclé, pas de nouvelle culture',1.4],['Fabrication','Turquie, électricité moins carbonée',0.3],['Transport','3 000 km en camion au lieu de 16 000',0.2]]},
+      {id:'bio',name:'Coton bio',where:'Portugal',saved:2.0,price:'+3,00 €',same:false,bg:'rose',total:3.2,label:'GOTS',
+       why:[['Matière','coton bio, sans engrais de synthèse',0.5],['Fabrication','Portugal, électricité plus propre',1.3],['Transport','2 000 km en camion',0.2]]},
+      {id:'occas',name:'Seconde main',where:'Friperie du magasin',saved:4.8,price:'−7,00 €',same:false,bg:'jaune',total:0.4,
+       why:[['Matière','rien de neuf à produire',2.4],['Fabrication','déjà fabriqué',2.2],['Transport','reste dans le magasin',0.2]]}
+    ]},
+  pull:{label:'Pull mérinos',name:'Pull en laine mérinos',meta:'Marque C · 59,00 €',rayon:'pulls',matiere:'Laine mérinos',pays:'Portugal',total:11.7,
+    bars:[['Matière','laine mérinos',9.8,'var(--bleu)'],['Fabrication','Portugal',1.6,'var(--rose)'],['Transport, vente','camion · 1 800 km',0.3,'var(--sur)']],alts:[]},
+  inconnu:{label:'Inconnu',unknown:true}
+};
+const QUESTIONS=[
+  {k:'temps',kick:'Question 1 / 3',t:'Combien de temps pour tes achats ?',h:'Pour te proposer des alternatives qui tiennent dans ton temps.',o:[['Moins de 15 min','Je fais vite, entre deux rendez-vous'],['15 à 30 min','Un passage classique'],['J’ai le temps','Je peux comparer un peu plus']],cta:'Suivant'},
+  {k:'budget',kick:'Question 2 / 3',t:'Ton budget, plutôt ?',h:'Les alternatives restent dans ton budget, au centime près.',o:[['Serré','Chaque euro compte'],['Équilibré','Un petit écart si ça vaut le coup'],['Souple','Je privilégie l’impact']],cta:'Suivant'},
+  {k:'mobilite',kick:'Question 3 / 3',t:'Tu te déplaces comment ?',h:'Pour ne jamais t’envoyer loin de ton trajet.',o:[['À pied ou à vélo','Je reste dans mon quartier'],['En transports en commun','Je m’organise selon les lignes'],['En voiture','Un petit détour, pas plus']],cta:'C’est parti'}
+];
+const CHALLENGES=[
+  {t:'Laver à 30 °C toute la semaine',d:'Ton linge s’use moins vite et la machine consomme moins.',kg:1.1,eff:'2 min d’effort'},
+  {t:'Faire sécher à l’air libre',d:'Le sèche-linge est l’appareil le plus gourmand de la buanderie.',kg:0.9,eff:'5 min d’effort'},
+  {t:'Recoudre un bouton ou un ourlet',d:'Un vêtement réparé, c’est un vêtement en moins à racheter.',kg:0.6,eff:'15 min d’effort'},
+  {t:'Donner 3 vêtements que tu ne portes plus',d:'Ils servent à quelqu’un d’autre au lieu de dormir au placard.',kg:0.5,eff:'10 min d’effort'}
+];
+const SEED=[{name:'Jean droit',sub:'hier · seconde main',kg:13.4,cat:'Seconde main',vis:'jean',bg:'jaune'},{name:'Sweat à capuche',sub:'12 nov. · coton bio, Portugal',kg:3.1,cat:'Coton bio',vis:'sweat',bg:'rose'}];
+
+/* ---------- État ---------- */
+const S={screen:'welcome',answers:{temps:1,budget:0,mobilite:0},product:'tshirt',pick:'recycle',chosen:null,
+  history:SEED.map(h=>({...h})),challenge:0,draft:0,days:[true,true,false,false,false,false,false],challengeDone:false,
+  notif:true,series:false,offline:false,sheet:null,toast:null,query:'t-shirt coton',analyse:0};
+
+const TABS={issue:'issue',archives:'archives',impact:'impact',me:'me'};
+const TAB_OF={issue:'issue',other:'issue',done:'issue',archives:'archives',impact:'impact',me:'me',scan:null,recent:null};
+const NAV_SCREENS=['scan','issue','archives','impact','me','recent'];
+const BLUE=['scan','done'];
+
+function go(s){S.screen=s;S.sheet=null;render();$('#view').scrollTop=0;const h=$('#view h1, #view h2');if(h){h.setAttribute('tabindex','-1');h.focus({preventScroll:true});}}
+function sheet(s){S.sheet=s;render();const f=$('#layer .sheet h2');if(f){f.setAttribute('tabindex','-1');f.focus();}}
+let tt;function toast(m){S.toast=m;render();clearTimeout(tt);tt=setTimeout(()=>{S.toast=null;render();},2600);}
+const total=()=>S.history.reduce((a,h)=>a+h.kg,0);
+
+/* ---------- Écrans ---------- */
+const top=(kick,{back,close,skip}={})=>`<div class="top">${back?`<button class="ib" data-go="${back}" aria-label="Retour">${ic('back')}</button>`:close?`<button class="ib" data-go="${close}" aria-label="Fermer">${ic('close')}</button>`:'<span style="width:48px"></span>'}<p class="k">${kick||''}</p>${skip?`<button class="skip" data-go="${skip}">Passer</button>`:'<span style="width:48px"></span>'}</div>`;
+const srcLine=(sh='calc',txt='Source : Ecobalyse')=>`<div class="row between"><p class="small">${txt}</p><button class="lnk" data-sheet="${sh}">Comment on calcule</button></div>`;
+const bars=(list,max)=>list.map(([l,d,v,c])=>`<div class="barrow"><div class="l"><b>${l}</b>${d}</div><div class="track"><i style="width:${Math.max(4,v/max*100)}%;background:${c}"></i></div><span class="v">${fr(v)} kg</span></div>`).join('');
+
+const V={
+welcome(){return `<div class="blob" style="width:260px;height:260px;right:-90px;top:-110px;background:var(--rose)"></div><div class="dots" style="left:-30px;top:330px"></div>
+ <div class="pad spread"><div style="display:flex;flex-direction:column;gap:18px">
+  <div class="row between"><p class="k">Le zine · N°01</p><b>17 nov.</b></div>
+  ${dbl('Une alternative en 30 s','xl')}
+  <p class="lead">Même magasin, même budget. On compte ce que tu évites, pas ce que tu émets.</p>
+  <div class="card staple tilt-r"><p class="k">p.01 · comment ça marche</p><h2 class="h3">Scanne, compare, choisis</h2><p class="p">Le code-barres d’un vêtement suffit : matière, lieu de fabrication, et des alternatives du même rayon.</p></div>
+ </div><div class="stack"><button class="btn" data-go="q0">C’est parti</button><button class="lnk" data-act="hasAccount">J’ai déjà un compte</button></div></div>`},
+q(i){const q=QUESTIONS[i];const next=i<2?'q'+(i+1):'camera';return `<div class="blob" style="width:200px;height:200px;right:-70px;bottom:120px;background:${i===1?'var(--rose)':'var(--bleu)'}"></div>
+ ${top(q.kick,{back:i?'q'+(i-1):'welcome',skip:next})}<div class="pad spread"><div style="display:flex;flex-direction:column;gap:18px">
+ ${dbl(q.t)}<p class="p">${q.h}</p>
+ <div role="radiogroup" aria-label="${q.t}" style="display:flex;flex-direction:column;gap:12px">${q.o.map((o,j)=>`<button class="choice" role="radio" aria-checked="${S.answers[q.k]===j}" data-answer="${q.k}:${j}"><span class="tx"><b>${o[0]}</b><span>${o[1]}</span></span><span class="dot">${S.answers[q.k]===j?ic('check',14,'var(--encre-p)'):''}</span></button>`).join('')}</div>
+ </div><div class="stack"><button class="btn" data-go="${next}">${q.cta}</button><p class="small" style="text-align:center">Tu pourras modifier tes réponses dans Moi.</p></div></div>`},
+camera(){return `<div class="blob" style="width:240px;height:240px;left:-50px;top:10px;background:var(--bleu)"></div><div class="blob" style="width:160px;height:160px;left:120px;top:80px;background:var(--rose)"></div>
+ ${top('Dernière étape',{back:'q2'})}<div class="pad spread" style="padding-top:200px"><div style="display:flex;flex-direction:column;gap:14px">
+ ${dbl('Scanne une étiquette')}<p class="p">Le code-barres de l’étiquette suffit : on lit la matière et le pays de fabrication. La caméra ne sert qu’à ça.</p>
+ <div class="tiles"><div class="tile r tilt-l"><b>3 s</b><span>pour répondre</span></div><div class="tile y tilt-r"><b>0 km</b><span>de détour</span></div><div class="tile o"><b>1 tap</b><span>pour la source</span></div></div>
+ </div><div class="stack"><button class="btn" data-go="scan">Autoriser la caméra</button><button class="btn2" data-go="scan">Plus tard</button></div></div>`},
+scan(){const p=PRODUCTS[S.product];return `<div class="blob" style="width:260px;height:260px;right:-90px;top:-120px;background:var(--rose)"></div><div class="dots" style="left:-20px;bottom:30px"></div>
+ <div class="pad" style="gap:22px;text-align:center"><button class="store" data-act="store">Enseigne pilote – Lyon 3 · textile</button>
+ <h2 class="h3" style="font-size:24px;color:var(--carte)">Vise le code-barres de l’étiquette</h2>
+ <button class="finder" data-act="doScan" aria-label="Scanner l’étiquette (${p.label})"><span class="lab"><span class="code"></span><small>${p.unknown?'Réf. inconnue':esc((p.matiere||'')+' · '+(p.pays||''))}</small></span><span class="beam"></span></button>
+ <p class="p">Touche le cadre pour simuler la lecture.</p>
+ <div class="tools"><button data-act="flash"><i>${ic('flash')}</i>Lampe</button><button data-go="search"><i>${ic('search')}</i>Saisir</button><button data-go="recent"><i>${ic('hist')}</i>Derniers scans</button></div></div>`},
+analyse(){const p=PRODUCTS[S.product];const st=S.analyse;const rows=p.unknown?[['Étiquette','code-barres lu'],['Fiche produit','recherche…']]:[['Matière',p.matiere],['Fabrication',p.pays],['Alternatives','dans ce rayon…']];
+ return `<div class="blob" style="width:220px;height:220px;right:-60px;bottom:-40px;background:var(--rose)"></div>${top('Analyse',{close:'scan'})}
+ <div class="pad">${dbl('On lit l’étiquette…')}<div class="steps" aria-live="polite">${rows.map((r,i)=>{const ok=i<st;return `<div class="step ${ok?'ok':'wait'}"><span class="d">${ok?ic('check',16,'var(--encre-p)'):''}</span><span style="display:flex;flex-direction:column"><b style="font-size:13px">${r[0]}</b>${ok?`<span>${r[1]}</span>`:'<span class="skel"></span>'}</span></div>`}).join('')}</div>
+ <p class="small">Réponse en moins de 3 secondes.</p></div>`},
+result(){const p=PRODUCTS[S.product];const alt=p.alts.find(a=>a.id===S.pick);const max=Math.max(...p.bars.map(b=>b[2]));
+ return `${top('Scanné · rayon '+p.rayon,{close:'scan'})}<div class="pad" style="gap:12px;padding-bottom:110px">
+ <div style="display:flex;flex-direction:column;gap:6px"><p class="k">${p.meta}</p>${dbl(p.name)}
+  <div class="row" style="flex-wrap:wrap;gap:8px"><span class="pill">${ic('thread',16)}${p.matiere}</span><span class="pill">${ic('globe',16)}${p.pays}</span></div></div>
+ <section class="card" aria-label="D’où vient son impact" style="gap:8px;padding:12px 14px 4px"><div class="row between"><p class="k">D’où vient son impact</p><b class="num">≈ ${fr(p.total)} kg CO₂e</b></div>${bars(p.bars,max)}${srcLine()}</section>
+ ${p.alts.length?`<p class="k">3 alternatives dans ce rayon</p><div role="radiogroup" aria-label="Alternatives" style="display:flex;flex-direction:column;gap:8px">${p.alts.map(a=>`<button class="alt" role="radio" aria-checked="${a.id===S.pick}" data-pick="${a.id}">${vig('tshirt',a.bg)}<span class="tx"><b>${a.name}</b><span>${a.where} · −${fr(a.saved)} kg CO₂e</span></span><span class="pill ${a.same?'y':'d'}">${a.price}</span></button>`).join('')}</div><button class="lnk" style="align-self:flex-start" data-sheet="gots">Label GOTS du coton bio : ça garantit quoi ?</button>`
+ :`<div class="dash"><b>Pas d’alternative dans ce magasin</b><p class="p">On préfère te le dire plutôt que t’envoyer ailleurs. Ce pull est déjà fabriqué en Europe.</p></div><div class="banner i">${ic('info',20)}Bon à savoir : lavé à la main et séché à plat, il peut durer 10 ans.</div>`}
+ </div><div style="position:sticky;bottom:0;z-index:2;background:var(--papier);border-top:2px solid var(--encre);padding:10px 18px 14px;margin-top:auto">${alt?`<button class="btn" data-act="choose">Je prends ${alt.id==='occas'?'la seconde main':'le '+alt.name.toLowerCase()}</button>`:`<button class="btn" data-go="scan">Scanner un autre vêtement</button>`}</div>`},
+chosen(){const a=S.chosen;const km=Math.round(a.saved/0.2);return `<div style="background:var(--bleu);height:250px;position:relative;overflow:hidden;flex:0 0 auto;color:var(--carte)"><div class="blob" style="width:230px;height:230px;right:-40px;top:30px;background:var(--rose)"></div><div class="dots b" style="left:-10px;top:140px"></div>
+  <div style="position:absolute;right:30px;top:40px;transform:rotate(-6deg)">${vis('tshirt',130,'var(--carte)')}</div>
+  <p class="k" style="position:absolute;left:18px;top:16px">Adopté · N°47</p><p style="position:absolute;left:18px;bottom:18px;margin:0;font-family:var(--titre);font-size:40px;line-height:.9;text-transform:uppercase;max-width:230px">${a.name}</p></div>
+ <div class="pad spread"><div style="display:flex;flex-direction:column;gap:14px">
+ <p class="lead"><b>Bien joué.</b> ${a.same?'Même prix, et ':''}${fr(a.saved).replace(',0','')} kg de CO₂e en moins pour ce t-shirt.</p>
+ <div class="tiles"><div class="tile r tilt-l"><b>−${fr(a.saved)} kg</b><span>CO₂e évités</span></div><div class="tile y tilt-r"><b>${a.same?'0 €':a.price}</b><span>${a.same?'de plus':'d’écart'}</span></div><div class="tile o"><b>≈ ${km} km</b><span>en voiture</span></div></div>
+ <div><p class="k">Pourquoi c’est mieux</p><div class="hist">${a.why.map(w=>`<div class="it"><span class="tx"><b style="font-size:13px">${w[0]}</b><span>${w[1]}</span></span><b class="num">−${fr(w[2])} kg</b></div>`).join('')}</div></div>
+ ${srcLine('calc','Source : Ecobalyse · ADEME')}</div>
+ <div class="stack"><button class="btn" data-go="scan">Scanner un autre vêtement</button><button class="lnk" data-go="impact">Voir mon impact</button></div></div>`},
+impact(){const t=total();if(!S.history.length)return `<div class="blob" style="width:260px;height:260px;left:-80px;bottom:-60px;background:var(--bleu)"></div><div class="blob" style="width:200px;height:200px;right:-60px;top:-60px;background:var(--rose)"></div>
+ <div class="pad"><div class="row between"><p class="k">Mon impact</p><b>Novembre</b></div>${dbl('Ton premier geste compte déjà')}<p class="lead">Ici, on additionne ce que tu évites. Pas de compteur à zéro : juste tes choix, quand tu en fais.</p>
+ <div class="card staple tilt-r"><p class="k">Premier défi</p><h2 class="h3">Scanne un vêtement que tu portes souvent</h2><p class="p">Tu verras d’où vient son impact : matière, fabrication, transport.</p><button class="btn" data-go="scan">Scanner un vêtement</button></div></div>`;
+ const cats={};S.history.forEach(h=>cats[h.cat]=(cats[h.cat]||0)+h.kg);const list=Object.entries(cats).sort((a,b)=>b[1]-a[1]);const cols=['var(--bleu)','var(--rose)','var(--sur)','var(--jaune)'];const max=list[0][1];const top1=list[0];
+ return `<div class="pad" style="gap:12px"><div class="row between"><p class="k">Mon impact</p><b>Novembre</b></div>
+ <div style="position:relative;height:270px" role="img" aria-label="${fr(t)} kilos de CO₂e évités, soit environ ${Math.round(t/0.2)} kilomètres en voiture">
+  <div class="blob" style="width:250px;height:250px;left:0;top:10px;background:var(--bleu)"></div><div class="blob" style="width:170px;height:170px;left:170px;top:96px;background:var(--rose)"></div>
+  <p style="position:absolute;left:30px;top:56px;margin:0;font-family:var(--titre);font-size:68px;line-height:.85;color:var(--carte);text-transform:uppercase" class="num">${fr(t)}<br>kg</p>
+  <p style="position:absolute;left:34px;top:190px;margin:0;font-weight:700;color:var(--carte)">CO₂e évités</p>
+  <p style="position:absolute;left:258px;top:176px;margin:0;font-weight:700;color:var(--encre-p);line-height:1.2">≈ ${Math.round(t/0.2)} km<br>en voiture</p></div>
+ <div class="row"><button class="lnk" data-sheet="km">Comment on calcule</button></div>
+ <div style="display:flex;flex-direction:column;gap:6px"><p class="k">D’où ça vient</p>${list.map(([c,v],i)=>`<div class="barrow"><div class="l"><b>${c}</b>${S.history.filter(h=>h.cat===c).length} choix</div><div class="track"><i style="width:${Math.max(4,v/max*100)}%;background:${cols[i%4]}"></i></div><span class="v">${fr(v)} kg</span></div>`).join('')}</div>
+ <div class="dash"><p class="p"><b>${esc(top1[0])} : ${Math.round(top1[1]/t*100)} % de ton impact évité.</b> Le prochain numéro parle des friperies près de chez toi.</p></div>
+ <div><p class="k">Derniers choix</p><div class="hist">${S.history.slice().reverse().map(h=>`<div class="it">${vig(h.vis,h.bg,44)}<span class="tx"><b>${h.name}</b><span>${h.sub}</span></span><span class="v">−${fr(h.kg)} kg</span></div>`).join('')}</div></div></div>`},
+issue(){const c=CHALLENGES[S.challenge];const n=S.days.filter(Boolean).length;return `<div class="blob" style="width:260px;height:260px;right:-90px;top:-110px;background:var(--rose)"></div><div class="dots" style="left:-30px;top:300px"></div>
+ <div class="pad" style="gap:14px"><div class="row between"><p class="k">Le zine · N°47</p><b>17 nov.</b></div>${dbl('Au menu cette sem.','xl')}
+ <article class="card staple tilt-l"><p class="k">Défi · p.04 · garde-robe</p><h2 class="h3">${c.t}</h2><p class="p">${c.d}</p>
+  <div class="row" style="flex-wrap:wrap;gap:8px"><span class="pill">≈ ${fr(c.kg)} kg CO₂e</span><span class="pill">${c.eff}</span></div>
+  <p class="small">Estimation : Ecobalyse · ADEME, 2026</p>
+  <div class="days" role="group" aria-label="Suivi : ${n} jours sur 7">${['L','M','M','J','V','S','D'].map((d,i)=>`<button aria-pressed="${S.days[i]}" data-day="${i}" aria-label="Jour ${i+1}">${d}</button>`).join('')}</div>
+  <div class="row" style="gap:14px"><button class="btn" style="width:auto" data-act="challengeDone">C’est fait</button><button class="lnk" data-go="other">Autre défi</button></div></article>
+ <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><button data-go="impact" style="border:0;background:var(--bleu);color:var(--carte);text-align:left;padding:14px;position:relative;overflow:hidden"><span style="display:block;font-family:var(--titre);font-size:24px;line-height:1;text-transform:uppercase" class="num">${fr(total())} kg</span><span style="font-weight:700;font-size:13px">CO₂e évités en novembre</span><span class="blob" style="width:70px;height:70px;right:-20px;bottom:-24px;background:var(--rose)"></span></button>
+ <div class="dash" style="border-radius:0"><p class="k">Au sommaire</p><b style="font-size:13px">p.05 Réparer un jean<br>p.06 Friperies du coin<br>p.07 Lire une étiquette</b></div></div></div>`},
+other(){return `<div class="blob" style="width:220px;height:220px;right:-60px;bottom:40px;background:var(--bleu)"></div>${top('Défi · N°47',{back:'issue'})}<div class="pad spread"><div style="display:flex;flex-direction:column;gap:16px">
+ ${dbl('Choisis un autre défi')}<p class="p">Classés du plus utile au plus simple, selon tes réponses.</p>
+ <div role="radiogroup" aria-label="Défis" style="display:flex;flex-direction:column;gap:12px">${CHALLENGES.map((c,i)=>i===S.challenge?'':`<button class="choice" role="radio" aria-checked="${S.draft===i}" data-draft="${i}"><span class="tx"><b>${c.t}</b><span>≈ ${fr(c.kg)} kg · ${c.eff.replace(' d’effort','')} · 0 €</span></span><span class="dot">${S.draft===i?ic('check',14,'var(--encre-p)'):''}</span></button>`).join('')}</div>
+ <p class="small">Estimations : Ecobalyse · ADEME, 2026</p></div><div class="stack"><button class="btn" data-act="takeChallenge">Je prends celui-là</button><p class="small">Changer de défi ne change rien à ta progression.</p></div></div>`},
+done(){const c=CHALLENGES[S.challenge];return `<div class="blob" style="width:300px;height:300px;right:-80px;top:60px;background:var(--rose)"></div><div class="dots" style="left:-20px;bottom:150px"></div>
+ <div class="pad spread"><div style="display:flex;flex-direction:column;gap:16px"><p class="k">Défi · N°47</p><p style="margin:0;font-family:var(--titre);font-size:60px;line-height:.9;text-transform:uppercase">Défi<br>relevé !</p>
+ <p class="lead">${c.t}. Bien joué.</p><div class="tile r tilt-l" style="align-self:flex-start;min-width:180px"><b>+${fr(c.kg)} kg</b><span>ajoutés à ton impact</span></div><p class="small">Source : Ecobalyse · ADEME, 2026</p></div>
+ <div class="stack"><button class="btn" data-go="impact">Voir mon impact</button><button class="lnk" data-go="issue">Retour au numéro</button></div></div>`},
+archives(){const c=[['N°47','Garde-robe à 30 °C','var(--bleu)','var(--rose)','var(--carte)',-1.5,'issue'],['N°46','Réparer un jean','var(--rose)','var(--bleu)','var(--encre-p)',1,null],['N°45','La seconde main','var(--carte)','var(--bleu)','var(--encre)',1.5,null],['Hors-série','Lire une étiquette','var(--jaune)','var(--rose)','var(--encre)',-1,null]];
+ return `<div class="pad" style="gap:14px">${dbl('Les archives','xl')}<label class="field" for="q-arch">Chercher un sujet<input id="q-arch" type="search" placeholder="jean, laine, étiquette…"></label>
+ <div class="covers">${c.map(x=>`<button class="cover" style="background:${x[2]};--c2:${x[3]};color:${x[4]};transform:rotate(${x[5]}deg);${x[2]==='var(--carte)'?'border:2px solid var(--encre)':''}" data-act="cover" data-target="${x[6]||''}"><span>${x[0]}</span><b>${x[1]}</b></button>`).join('')}</div></div>`},
+me(){const a=S.answers;return `<div class="blob" style="width:220px;height:220px;right:-70px;top:-80px;background:var(--rose)"></div><div class="pad" style="gap:14px">${dbl('Moi','xl')}
+ <section class="card" style="padding:12px 14px 4px;gap:0"><p class="k">Tes réponses</p>${QUESTIONS.map((q,i)=>`<div class="row between" style="border-bottom:2px dashed var(--encre)"><span><b style="font-size:13px">${['Temps','Budget','Mobilité'][i]}</b> ${q.o[a[q.k]][0]}</span><button class="lnk" data-go="q${i}">Modifier</button></div>`).join('')}</section>
+ ${[['notif','Notifications','2 par semaine maximum'],['series','Séries personnelles','privées, désactivées par défaut']].map(([k,l,d])=>`<div class="row between" style="min-height:56px"><span style="display:flex;flex-direction:column"><b>${l}</b><span class="small">${d}</span></span><button class="toggle" role="switch" aria-checked="${S[k]}" aria-label="${l}" data-toggle="${k}"><i></i></button></div>`).join('')}
+ <div class="card staple tilt-l"><h2 class="h3">Garde ton historique</h2><p class="p">Sans compte, tout reste sur ce téléphone. Un compte sert seulement à le sauvegarder.</p><button class="btn2" data-sheet="account">Créer un compte</button></div>
+ <div class="row" style="gap:20px"><button class="lnk" data-sheet="calc">Méthode et sources</button><button class="lnk" data-act="privacy">Confidentialité</button></div></div>`},
+recent(){return `<div class="blob" style="width:220px;height:220px;right:-60px;bottom:-40px;background:var(--bleu)"></div><div class="pad" style="gap:14px">
+ ${S.offline?`<div class="banner y">${ic('hist',20)}Hors connexion : tes derniers scans restent là.</div>`:''}${dbl('Derniers scans')}
+ <div class="hist">${S.history.slice().reverse().map(h=>`<div class="it">${vig(h.vis,h.bg,44)}<span class="tx"><b>${h.name}</b><span>${h.sub}</span></span><span class="v">−${fr(h.kg)} kg</span></div>`).join('')}<div class="it">${vig('sweat','jaune',44)}<span class="tx"><b>Pull en laine mérinos</b><span>10 nov. · pas d’alternative ici</span></span><span class="v">—</span></div></div>
+ <p class="small">Valeurs calculées au moment du scan · Source : Ecobalyse · ADEME</p>
+ <div class="card"><p class="k">Défi en cours${S.offline?' · enregistré':''}</p><b>${CHALLENGES[S.challenge].t} · ${S.days.filter(Boolean).length} jours sur 7</b></div></div>`},
+search(){const all=[['T-shirt basique blanc','Marque A · Bangladesh','12,99 €','tshirt'],['T-shirt col V','Marque B · Inde','9,99 €','tshirt'],['T-shirt coton recyclé','Marque distributeur · Turquie','12,99 €','tshirt'],['Pull en laine mérinos','Marque C · Portugal','59,00 €','pull']];
+ const q=S.query.trim().toLowerCase().split(/\s+/).filter(Boolean);const res=all.filter(r=>q.every(w=>(r[0]+' '+r[1]).toLowerCase().includes(w.replace('coton',''))||r[0].toLowerCase().includes(w)));
+ return `${top('Saisir',{back:'scan'})}<div class="pad" style="gap:14px">${dbl('Cherche un vêtement')}<label class="field" for="q-search">Nom ou référence<input id="q-search" type="search" value="${esc(S.query)}" autocomplete="off"></label>
+ <p class="k">${res.length} résultat${res.length>1?'s':''} dans ce magasin</p><div class="hist">${res.map(r=>`<button class="it" style="border-left:0;border-right:0;border-top:0;background:none;text-align:left;width:100%" data-open="${r[3]}">${vig(r[3]==='pull'?'sweat':'tshirt','bleu',44)}<span class="tx"><b>${r[0]}</b><span>${r[1]}</span></span><span class="v">${r[2]}</span></button>`).join('')||'<p class="p">Rien pour l’instant. Essaie « t-shirt » ou « pull ».</p>'}</div></div>`},
+unknown(){return `<div class="blob" style="width:240px;height:240px;right:-60px;top:20px;background:var(--rose)"></div>${top('Scanné · rayon pulls',{close:'scan'})}<div class="pad spread"><div style="display:flex;flex-direction:column;gap:16px">
+ <span style="transform:rotate(-4deg);align-self:flex-start">${vig('sweat','jaune',120)}</span>${dbl('On ne connaît pas encore ce vêtement')}
+ <p class="lead">Aide-nous à l’ajouter : une photo de l’étiquette suffit, ça prend 20 secondes.</p><p class="small">Code-barres lu : 3 760 123 456 789</p></div>
+ <div class="stack"><button class="btn" data-sheet="report">Signaler ce vêtement</button><button class="btn2" data-go="search">Saisir à la main</button><button class="lnk" data-go="scan">Scanner autre chose</button></div></div>`}
+};
+const SHEETS={
+calc(){const p=PRODUCTS.tshirt;const a=p.alts.find(x=>x.id===S.pick)||p.alts[0];return `<div class="row between"><h2 class="h3" style="font-size:20px">Comment on calcule</h2><button class="ib ring" data-close aria-label="Fermer">${ic('close',20)}</button></div>
+ <div><p class="k">Hypothèse</p><p class="p">Un t-shirt de 150 g. On additionne la matière (culture, filature), la fabrication (tissage, teinture, confection, selon l’électricité du pays) et le transport.</p></div>
+ <div><p class="k">Calcul</p><div class="calc"><div><span>Coton conventionnel · Bangladesh · bateau</span><b class="num">5,2 kg</b></div><div><span>${a.name} · ${a.where}</span><b class="num">${fr(a.total)} kg</b></div><div><b>Évité</b><b class="num" style="color:var(--rose-t)">≈ ${fr(a.saved)} kg CO₂e</b></div></div></div>
+ <p class="small">Incertitude ± 25 % : la part de fibres recyclées et l’électricité de l’usine font varier les valeurs.</p>
+ <div><p class="k">Sources</p>${[['1. Ecobalyse · coût environnemental textile','mise à jour : sept. 2026'],['2. Base Empreinte® ADEME','mise à jour : oct. 2026'],['3. Étiquette du produit (composition, pays)','lue aujourd’hui']].map(s=>`<div class="src"><div><b>${s[0]}</b><span>${s[1]}</span></div>${ic('ext',20)}</div>`).join('')}</div>
+ <button class="lnk" style="align-self:flex-start" data-act="report-error">Signaler une erreur</button>`},
+gots(){return `<div class="row between"><h2 class="h3" style="font-size:20px">Le label GOTS, ça garantit quoi ?</h2><button class="ib ring" data-close aria-label="Fermer">${ic('close',20)}</button></div><p class="k">Vu sur : coton bio, Portugal</p>
+ <div style="display:flex;flex-direction:column;gap:8px"><b>Ce qu’il garantit</b>${['Au moins 70 % de fibres bio, tracées du champ à l’étiquette','Pas de teintures ni de produits chimiques interdits','Des critères sociaux dans les usines (salaires, sécurité)'].map(t=>`<div class="row" style="align-items:flex-start"><span style="width:22px;height:22px;border-radius:99px;background:var(--rose);display:grid;place-items:center;flex:0 0 auto">${ic('check',14,'var(--encre-p)')}</span><span>${t}</span></div>`).join('')}</div>
+ <div style="display:flex;flex-direction:column;gap:8px"><b>Ce qu’il ne garantit pas</b>${['Une fabrication proche de chez toi','Des fibres recyclées'].map(t=>`<div class="row">${ic('info',22)}<span>${t}</span></div>`).join('')}</div>
+ <div><p class="k">Source</p><div class="src"><div><b>Global Organic Textile Standard</b><span>version 7.0 · consultée en nov. 2026</span></div>${ic('ext',20)}</div></div>`},
+km(){const t=total();return `<div class="row between"><h2 class="h3" style="font-size:20px">${Math.round(t/0.2)} km en voiture ?</h2><button class="ib ring" data-close aria-label="Fermer">${ic('close',20)}</button></div>
+ <p class="p">On convertit tes ${fr(t)} kg de CO₂e évités avec le facteur d’une voiture thermique moyenne.</p>
+ <div class="calc"><div><span>Impact évité</span><b class="num">${fr(t)} kg CO₂e</b></div><div><span>Voiture thermique moyenne</span><b class="num">≈ 0,2 kg CO₂e / km</b></div><div><b>Équivalent</b><b class="num" style="color:var(--rose-t)">≈ ${Math.round(t/0.2)} km</b></div></div>
+ <div><p class="k">Source</p><div class="src"><div><b>Base Empreinte® ADEME · voiture particulière</b><span>mise à jour : oct. 2026</span></div>${ic('ext',20)}</div></div>`},
+report(){return `<div class="row between"><h2 class="h3" style="font-size:20px">Ajoute ce vêtement</h2><button class="ib ring" data-close aria-label="Fermer">${ic('close',20)}</button></div>
+ <form id="report-form" style="display:flex;flex-direction:column;gap:14px"><label class="field" for="r-code">Code-barres (lu automatiquement)<input id="r-code" value="3 760 123 456 789" readonly></label>
+ <label class="field" for="r-name">Nom du vêtement (facultatif)<input id="r-name" placeholder="ex. pull col rond en laine"></label>
+ <label class="photo" for="r-photo">${ic('scan',32)}<span id="r-photo-label">Photographier l’étiquette</span><input id="r-photo" type="file" accept="image/*"></label>
+ <p class="small">On lit la composition et le pays de fabrication sur la photo. Rien d’autre n’est envoyé.</p><button class="btn" type="submit">Envoyer</button></form>`},
+account(){return `<div class="row between"><h2 class="h3" style="font-size:20px">Garde ton historique</h2><button class="ib ring" data-close aria-label="Fermer">${ic('close',20)}</button></div><p class="p">Tes choix et ton impact, sur tous tes appareils.</p>
+ ${['Continuer avec Apple','Continuer avec Google','Continuer avec un e-mail'].map(l=>`<button class="btn2" data-act="account">${l}</button>`).join('')}
+ <p class="small">On stocke tes choix et tes réponses, rien d’autre. Tu peux tout supprimer quand tu veux.</p><button class="lnk" data-close style="align-self:center">Plus tard</button>`}
+};
+
+/* ---------- Rendu ---------- */
+const JUMPS=[['welcome','Accueil'],['q0','Questions'],['scan','Scanner'],['result','Résultat'],['issue','Défi'],['impact','Impact'],['archives','Archives'],['me','Moi'],['unknown','Inconnu'],['recent','Hors connexion']];
+function render(){
+  const s=S.screen;const qi=/^q(\d)$/.exec(s);
+  const view=$('#view');view.className='view'+(BLUE.includes(s)?' bleu':'');
+  view.innerHTML=qi?V.q(+qi[1]):V[s]();
+  $('#sb').className='sb'+(BLUE.includes(s)?' on-bleu':'');
+  $('#sb').style.background=BLUE.includes(s)?'var(--bleu)':'';
+  const showNav=NAV_SCREENS.includes(s);const nav=$('#nav');nav.hidden=!showNav;
+  if(showNav){const cur=TAB_OF[s];nav.innerHTML=`<button data-go="issue" ${cur==='issue'?'aria-current="page"':''}><span>Ce n°</span></button><button data-go="archives" ${cur==='archives'?'aria-current="page"':''}><span>Archives</span></button><button class="scan" data-go="scan" aria-label="Scanner un vêtement">${ic('scan',28,'var(--encre-p)')}</button><button data-go="impact" ${cur==='impact'?'aria-current="page"':''}><span>Impact</span></button><button data-go="me" ${cur==='me'?'aria-current="page"':''}><span>Moi</span></button>`;}
+  const layer=$('#layer');
+  layer.innerHTML=(S.sheet?`<div class="scrim" data-close-bg><section class="sheet" role="dialog" aria-modal="true">${SHEETS[S.sheet]()}</section></div>`:'')+(S.toast?`<div class="toast" role="status">${S.toast}</div>`:'');
+  $('#jump').innerHTML=JUMPS.map(([k,l])=>`<button type="button" data-go="${k}" aria-pressed="${s===k||(k==='q0'&&!!qi)}">${l}</button>`).join('');
+  $('#product').innerHTML=Object.entries(PRODUCTS).map(([k,p])=>`<button type="button" data-product="${k}" aria-pressed="${S.product===k}">${p.label}</button>`).join('');
+  $('#offline').setAttribute('aria-checked',S.offline);
+}
+
+function doScan(){S.analyse=0;go('analyse');const p=PRODUCTS[S.product];const n=p.unknown?1:3;let i=0;const tick=()=>{if(S.screen!=='analyse')return;i++;S.analyse=i;render();if(i<n)setTimeout(tick,380);else setTimeout(()=>{if(S.screen!=='analyse')return;if(p.unknown)go('unknown');else{S.pick=p.alts[0]?p.alts[0].id:null;go('result');}},450);};setTimeout(tick,380);}
+
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-go],[data-act],[data-sheet],[data-close],[data-close-bg],[data-answer],[data-pick],[data-draft],[data-day],[data-toggle],[data-product],[data-open]');
+  if(!t)return;
+  if(t.hasAttribute('data-close-bg')&&e.target!==t)return;
+  if(t.dataset.sheet!==undefined){e.stopPropagation();sheet(t.dataset.sheet);return;}
+  if(t.hasAttribute('data-close')||t.hasAttribute('data-close-bg')){S.sheet=null;render();return;}
+  if(t.dataset.go){go(t.dataset.go);return;}
+  if(t.dataset.answer){const [k,v]=t.dataset.answer.split(':');S.answers[k]=+v;render();return;}
+  if(t.dataset.pick){S.pick=t.dataset.pick;render();return;}
+  if(t.dataset.draft){S.draft=+t.dataset.draft;render();return;}
+  if(t.dataset.day){const i=+t.dataset.day;S.days[i]=!S.days[i];render();return;}
+  if(t.dataset.toggle){S[t.dataset.toggle]=!S[t.dataset.toggle];render();return;}
+  if(t.dataset.product){S.product=t.dataset.product;render();toast('Prochain scan : '+PRODUCTS[S.product].label.toLowerCase()+'.');return;}
+  if(t.dataset.open){S.product=t.dataset.open;S.pick=PRODUCTS[S.product].alts[0]?PRODUCTS[S.product].alts[0].id:null;go('result');return;}
+  const a=t.dataset.act;
+  if(a==='doScan')doScan();
+  else if(a==='choose'){const alt=PRODUCTS[S.product].alts.find(x=>x.id===S.pick);S.chosen=alt;S.history=S.history.filter(h=>h.key!=='tshirt');S.history.push({key:'tshirt',name:'T-shirt '+alt.name.toLowerCase().replace('seconde main','seconde main'),sub:'aujourd’hui · '+alt.where,kg:alt.saved,cat:alt.name,vis:'tshirt',bg:alt.bg});go('chosen');}
+  else if(a==='challengeDone'){if(!S.challengeDone){const c=CHALLENGES[S.challenge];S.history.push({name:'Défi : '+c.t.toLowerCase(),sub:'cette semaine',kg:c.kg,cat:'Défis',vis:'tshirt',bg:'rose'});S.challengeDone=true;}S.days=S.days.map(()=>true);go('done');}
+  else if(a==='takeChallenge'){S.challenge=S.draft;S.days=S.days.map(()=>false);S.challengeDone=false;S.draft=CHALLENGES.findIndex((c,i)=>i!==S.challenge);go('issue');toast('Nouveau défi enregistré.');}
+  else if(a==='account'){S.sheet=null;toast('Démo : aucun compte n’est créé.');}
+  else if(a==='hasAccount')toast('Démo : la connexion n’est pas simulée.');
+  else if(a==='flash')toast('Lampe allumée.');
+  else if(a==='store')toast('Magasin détecté : enseigne pilote, Lyon 3.');
+  else if(a==='privacy')toast('Sans compte, rien ne quitte ce téléphone.');
+  else if(a==='report-error'){S.sheet=null;toast('Merci, on vérifie ce chiffre.');}
+  else if(a==='cover'){if(t.dataset.target)go(t.dataset.target);else toast('Ce numéro arrive bientôt.');}
+});
+document.addEventListener('submit',e=>{if(e.target.id==='report-form'){e.preventDefault();S.sheet=null;go('scan');toast('Merci ! On te prévient dès qu’il est ajouté.');}});
+document.addEventListener('change',e=>{if(e.target.id==='r-photo'&&e.target.files[0]){$('#r-photo-label').textContent='Photo ajoutée : '+e.target.files[0].name;}});
+document.addEventListener('input',e=>{if(e.target.id==='q-search'){S.query=e.target.value;const pos=e.target.selectionStart;render();const i=$('#q-search');i.focus();i.setSelectionRange(pos,pos);}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.sheet){S.sheet=null;render();}});
+$('#offline').addEventListener('click',e=>{e.preventDefault();S.offline=!S.offline;if(S.offline)go('recent');else render();});
+$('#reset').addEventListener('click',()=>{S.history=[];S.chosen=null;S.days=S.days.map(()=>false);S.challengeDone=false;go('impact');toast('Démo remise à zéro.');});
+render();
+})();
+</script>
+</body>
+</html>
